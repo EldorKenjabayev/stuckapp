@@ -1,0 +1,41 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# Logs
+*.log
+
+# Database
+db.sqlite3
+
+# Media / Static
+media/
+staticfiles/
+
+# Virtualenv
+venv/
+.env
+
+# Archives
+*.tar.gz
+
+# Backups
+backup/
+
+# IDEs and OS
+.*
+!.gitignore
+!.env.example
+
+# Nginx / Gunicorn logs
+gunicorn_access.log
+gunicorn_error.log
+nginx_access.log
+nginx_error.log
+
+# Pid
+*.pid
+
+# Apple Double
+._*

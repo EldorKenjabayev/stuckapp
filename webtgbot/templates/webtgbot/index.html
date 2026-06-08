@@ -1,0 +1,683 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="description" content="Онлайн консультация с профессиональными специалистами. 30 минут бесплатно.">
+    <title>STUCK — Онлайн Чат со Специалистом</title>
+    <link rel="stylesheet" href="{% static 'webtgbot/css/style.css' %}?v=2.4">
+    <link rel="icon"
+        href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔥</text></svg>">
+    <!-- Material Symbols -->
+    <link rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap">
+
+    <!-- Preload Assets -->
+    <link rel="preload" href="{% static 'webtgbot/img/wallpaperflare.com_wallpaper.jpg' %}" as="image">
+    <link rel="preload" href="{% static 'webtgbot/img/white-bacgroud.jpg' %}" as="image">
+</head>
+
+<body class="loading">
+    <!-- Premium Preloader -->
+    <div id="preloader" class="preloader">
+        <div class="preloader-content">
+            <div class="preloader-logo">
+                <img src="{% static 'webtgbot/img/logo.jpg' %}" alt="logo">
+                <div class="preloader-ring"></div>
+            </div>
+            <div class="preloader-text">STUCK</div>
+            <div class="preloader-bar">
+                <div class="preloader-progress"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Background Particles -->
+    <div class="bg-particles">
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="toast"></div>
+
+    <!-- Image Preview Overlay -->
+    <div id="filePreview" class="file-preview-overlay" onclick="closePreview()">
+        <button class="file-preview-close" onclick="closePreview()">
+            <span class="material-symbols-rounded">close</span>
+        </button>
+        <img id="previewImage" src="" alt="Preview">
+    </div>
+
+    <!-- Session Expired Overlay -->
+    <div id="sessionOverlay" class="session-overlay">
+        <div class="session-overlay-content">
+            <div class="session-overlay-icon">
+                <span class="material-symbols-rounded" style="font-size:72px; color:var(--gold);">timer_off</span>
+            </div>
+            <h2 class="color-white">Сессия завершена</h2>
+            <p class="color-white">Спасибо за общение! Ваша бесплатная 30-минутная сессия завершена.</p>
+            <button class="btn btn-primary" onclick="backToMenu()">
+                <span class="material-symbols-rounded">home</span> Вернуться в меню
+            </button>
+        </div>
+    </div>
+
+    <!-- Specialist Detail Overlay -->
+    <div id="specialistDetailOverlay" class="session-overlay" style="background: rgba(0, 0, 0, 0.85) !important;">
+        <div class="session-overlay-content"
+            style="max-width: 400px; max-height: 90vh; overflow-y: auto; padding-top: 40px; margin-top: auto; margin-bottom: auto; background: #212121 !important; border-color: rgba(255,255,255,0.1) !important;">
+            <div id="specDetailPhotoWrap"
+                style="margin-bottom: 24px; border-radius: var(--radius-xl); overflow: hidden; display: none; box-shadow: var(--shadow-md);">
+                <img id="specDetailPhoto" src="" alt=""
+                    style="width: 100%; height: auto; display: block; object-fit: cover;">
+            </div>
+            <h2 id="specDetailName"
+                style="margin-bottom: 12px; font-size: 24px; font-weight: 700; text-align: left; color: #ffffff !important;">
+            </h2>
+            <div id="specDetailInfo"
+                style="font-size: 15px; line-height: 1.7; white-space: pre-wrap; opacity: 0.9; text-align: left; color: #ffffff !important;">
+            </div>
+
+            <div style="display:flex; gap:12px; margin-top:32px; padding-bottom: 20px;">
+                <button class="btn btn-secondary"
+                    style="flex: 1; padding: 12px; background: rgba(255,255,255,0.1) !important; color: #ffffff !important; border: 1px solid rgba(255,255,255,0.2) !important;"
+                    onclick="closeSpecialistDetail()">
+                    <span class="material-symbols-rounded">arrow_back</span> Назад
+                </button>
+                <button class="btn btn-primary" style="flex: 2; padding: 12px;" id="specDetailChatBtn">
+                    Чат 30 мин бесплатно
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Confirm End Session Overlay -->
+    <div id="confirmEndSessionOverlay" class="session-overlay">
+        <div class="session-overlay-content">
+            <div class="session-overlay-icon" style="background: rgba(255, 71, 87, 0.1);">
+                <span class="material-symbols-rounded" style="font-size:72px; color:var(--red);">logout</span>
+            </div>
+            <h2 class="color-white">Завершить сессию?</h2>
+            <p class="color-white">Вы уверены, что хотите завершить сессию? Это действие нельзя отменить.</p>
+            <div style="display:flex;gap:16px;margin-top:24px;">
+                <button class="btn btn-secondary" style="flex:1" onclick="closeConfirmEndSession()">Отмена</button>
+                <button class="btn btn-danger" style="flex:1" onclick="executeEndSession()">Завершить</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Global Theme Switcher Menu -->
+    <div class="global-actions">
+        <button class="header-action-btn" onclick="toggleGlobalMenu(event)">
+            <span class="material-symbols-rounded">more_vert</span>
+        </button>
+        <div id="globalMenu" class="dropdown-menu">
+            <div class="dropdown-item" onclick="toggleTheme()">
+                <span class="material-symbols-rounded" id="themeIconGlobal">dark_mode</span>
+                <span id="themeTextGlobal">Ночной режим</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="app-container">
+
+        <!-- ═══════════ SCREEN: REGISTER ═══════════ -->
+        <div id="screenRegister" class="screen active">
+            <div class="logo-container">
+                <div class="logo-icon width[100px] height[100px]">
+                    <img src="{% static 'webtgbot/img/logo.jpg' %}" width="100px" height="100px" alt="logo">
+                </div>
+                <div class="logo-title color-white">STUCK</div>
+                <div class="logo-subtitle color-white width-50%">Мягкие лапы помощи🐾</div>
+                <div class="logo-subtitle color-white width-50% height[100px]">
+                    <p>
+                        🌿Я твой помощник в поиске поддержки в трудные минуты. I'm STUCK — Я застрял - Это не
+                        оборот речи, это состояние людей вокруг нас. Они застревают в депрессии, в зависимостях, в
+                        тяжелых отношениях или их отсутствии. <br>
+
+                        👉Этот бот и канал помогает всем, кто нуждается в помощи, совете или просто внимании.
+                        Бесплатно и без лишних вопросов за 30 мин.🔞 <br>
+
+                        Кото - канал - <a href="https://t.me/+sh1JTz8dgrVlOGZi" style="color: inherit;">https://t.me/+sh1JTz8dgrVlOGZi</a> <br>
+                        Кот - admin - <a href="https://t.me/artemstuck" style="color: inherit;">@artemstuck</a> <br>
+
+                        👇К ВЫБОРУ СОБЕСЕДНИКА👇
+                    </p>
+                </div>
+            </div>
+
+            <div style="flex:1; display:flex; flex-direction:column; justify-content:center;">
+                <div class="input-group">
+                    <label class="color-white">Ваше имя</label>
+                    <div class="input-with-icon">
+                        <span class="material-symbols-rounded input-icon">person</span>
+                        <input type="text" id="registerName" class="input-field has-icon"
+                            placeholder="Введите ваше имя..." maxlength="50" autocomplete="off">
+                    </div>
+                </div>
+                <button id="registerBtn" class="btn btn-primary" onclick="registerUser()">
+                    <span class="material-symbols-rounded">rocket_launch</span> Начать
+                </button>
+
+
+            </div>
+        </div>
+
+        <!-- ═══════════ SCREEN: SPECIALIST LOGIN ═══════════ -->
+        <div id="screenSpecialistLogin" class="screen">
+            <div class="logo-container">
+                <div class="logo-icon" style="background:var(--gradient-teal);">
+                    <span class="material-symbols-rounded" style="font-size:40px;">badge</span>
+                </div>
+                <div class="logo-title">Вход</div>
+                <div class="logo-subtitle">Панель специалиста</div>
+            </div>
+
+            <div style="flex:1; display:flex; flex-direction:column; justify-content:center;">
+                <div class="input-group">
+                    <label>Логин</label>
+                    <div class="input-with-icon">
+                        <span class="material-symbols-rounded input-icon">account_circle</span>
+                        <input type="text" id="specUsername" class="input-field has-icon" placeholder="Введите логин..."
+                            autocomplete="username">
+                    </div>
+                </div>
+                <div class="input-group">
+                    <label>Пароль</label>
+                    <div class="input-with-icon">
+                        <span class="material-symbols-rounded input-icon">lock</span>
+                        <input type="password" id="specPassword" class="input-field has-icon"
+                            placeholder="Введите пароль..." autocomplete="current-password">
+                    </div>
+                </div>
+                <button class="btn btn-primary" onclick="specialistLogin()">
+                    <span class="material-symbols-rounded">login</span> Войти
+                </button>
+
+                <div class="text-center mt-16">
+                    <button class="btn btn-ghost btn-sm" onclick="showScreen('screenRegister')"
+                        style="width:auto; margin:0 auto;">
+                        <span class="material-symbols-rounded">arrow_back</span> Назад
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══════════ SCREEN: MAIN MENU ═══════════ -->
+        <div id="screenMenu" class="screen">
+            <div style="padding-top:20px;">
+                <h1 class="greeting-text color-white">Привет, <span id="userName" class="greeting-text"></span>! 👋</h1>
+                <p class="text-muted mt-8 color-white" style="font-size:14px;">Чем я могу вам помочь сегодня?</p>
+            </div>
+
+            <div class="menu-grid">
+                <div class="menu-card glass-card" onclick="openSpecializations()">
+                    <div class="menu-icon-wrap purple">
+                        <span class="material-symbols-rounded">description</span>
+                    </div>
+                    <div class="menu-label">Список специальностей</div>
+                </div>
+                <div class="menu-card glass-card" onclick="openTinder()">
+                    <div class="menu-icon-wrap teal">
+                        <span class="material-symbols-rounded">swipe</span>
+                    </div>
+                    <div class="menu-label">Тиндер специалистов</div>
+                </div>
+                <div class="menu-card glass-card" onclick="openGroups()">
+                    <div class="menu-icon-wrap pink">
+                        <span class="material-symbols-rounded">groups</span>
+                    </div>
+                    <div class="menu-label">Группы поддержки</div>
+                </div>
+                <div class="menu-card glass-card" onclick="openRequest()">
+                    <div class="menu-icon-wrap gold">
+                        <span class="material-symbols-rounded">help</span>
+                    </div>
+                    <div class="menu-label">Оставить запрос</div>
+                </div>
+            </div>
+
+            <div id="activeSessionBanner" class="active-session-banner hidden" onclick="resumeChat()">
+                <span class="material-symbols-rounded" style="font-size:28px; color:var(--green);">chat</span>
+                <div style="flex:1;">
+                    <div style="font-size:14px; font-weight:600;">Активная сессия</div>
+                    <div id="activeSessionName" style="font-size:12px; color:var(--text-muted);"></div>
+                </div>
+                <span class="material-symbols-rounded" style="color:var(--green);">arrow_forward</span>
+            </div>
+        </div>
+
+        <!-- ═══════════ SCREEN: SPECIALIZATIONS ═══════════ -->
+        <div id="screenSpecializations" class="screen">
+            <div class="screen-header">
+                <button class="back-btn" onclick="backToMenu()">
+                    <span class="material-symbols-rounded">arrow_back</span>
+                </button>
+                <div class="screen-title always-white">Специализации</div>
+            </div>
+            <div id="specList" class="spec-grid">
+                <div class="spinner"></div>
+            </div>
+        </div>
+
+        <!-- ═══════════ SCREEN: SPECIALISTS ═══════════ -->
+        <div id="screenSpecialists" class="screen">
+            <div class="screen-header">
+                <button class="back-btn" onclick="showScreen('screenSpecializations')">
+                    <span class="material-symbols-rounded">arrow_back</span>
+                </button>
+                <div id="specTitle" class="screen-title always-white">Специалисты</div>
+            </div>
+            <div id="specialistList" class="specialist-list">
+                <div class="spinner"></div>
+            </div>
+        </div>
+
+        <!-- ═══════════ SCREEN: TINDER ═══════════ -->
+        <div id="screenTinder" class="screen">
+            <div class="screen-header">
+                <button class="back-btn" onclick="backToMenu()">
+                    <span class="material-symbols-rounded">arrow_back</span>
+                </button>
+                <div class="screen-title color-white">
+                    <span class="material-symbols-rounded" style="vertical-align:middle;color:var(--pink);">swipe</span>
+                    Тиндер
+                </div>
+            </div>
+            <div class="tinder-container">
+                <div id="tinderCard" class="tinder-card">
+                    <div class="spinner"></div>
+                </div>
+                <div class="tinder-actions">
+                    <button class="tinder-btn skip" onclick="tinderSkip()">
+                        <span class="material-symbols-rounded">arrow_forward</span>
+                        <span class="btn-text">Дальше</span>
+                    </button>
+                    <button class="tinder-btn connect" onclick="tinderConnect()">
+                        <span class="material-symbols-rounded">chat_bubble</span>
+                        <span class="btn-text">30 минут бесплатно</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══════════ SCREEN: SUPPORT GROUPS ═══════════ -->
+        <div id="screenGroups" class="screen">
+            <div class="screen-header">
+                <button class="back-btn" onclick="backToMenu()">
+                    <span class="material-symbols-rounded">arrow_back</span>
+                </button>
+                <div class="screen-title color-white">Группы поддержки</div>
+            </div>
+            <div id="groupList" class="group-list">
+                <div class="spinner"></div>
+            </div>
+        </div>
+
+        <!-- ═══════════ SCREEN: REQUEST ═══════════ -->
+        <div id="screenRequest" class="screen">
+            <div class="screen-header">
+                <button class="back-btn" onclick="backToMenu()">
+                    <span class="material-symbols-rounded">arrow_back</span>
+                </button>
+                <div class="screen-title color-white">Оставить запрос</div>
+            </div>
+
+            <div class="request-form" id="requestForm">
+                <div class="input-group">
+                    <label class="color-white">Ваше имя</label>
+                    <div class="input-with-icon">
+                        <span class="material-symbols-rounded input-icon">person</span>
+                        <input type="text" id="requestName" class="input-field has-icon" placeholder="Введите имя...">
+                    </div>
+                </div>
+                <div class="input-group">
+                    <label class="color-white">Ваш контакт (TG или телефон)</label>
+                    <div class="input-with-icon">
+                        <span class="material-symbols-rounded input-icon">contact_support</span>
+                        <input type="text" id="requestContact" class="input-field has-icon"
+                            placeholder="@username или +79...">
+                    </div>
+                </div>
+                <div class="input-group">
+                    <label class="color-white">Опишите вашу проблему</label>
+                    <textarea id="requestProblem" class="input-field"
+                        placeholder="Расскажите, что вас беспокоит..."></textarea>
+                </div>
+                <button class="btn btn-primary" onclick="submitRequest()">
+                    <span class="material-symbols-rounded">send</span> Отправить запрос
+                </button>
+            </div>
+
+            <div class="request-success" id="requestSuccess">
+                <span class="material-symbols-rounded" style="font-size:72px; color:var(--green);">check_circle</span>
+                <h2>Заявка отправлена!</h2>
+                <p class="text-muted">В ближайшее время с вами свяжется наш специалист</p>
+                <button class="btn btn-secondary" onclick="backToMenu()">
+                    <span class="material-symbols-rounded">arrow_back</span> В меню
+                </button>
+            </div>
+        </div>
+
+        <!-- ═══════════ SCREEN: CHAT ═══════════ -->
+        <div id="screenChat" class="screen chat-screen">
+            <!-- Warning Banner -->
+            <div id="warningBanner" class="warning-banner">
+                <span class="material-symbols-rounded">warning</span>
+                До конца сессии осталось менее 5 минут!
+            </div>
+
+            <!-- Chat Header -->
+            <div class="chat-header">
+                <button class="back-btn" onclick="minimizeChat()">
+                    <span class="material-symbols-rounded">arrow_back</span>
+                </button>
+                <div id="chatAvatar" class="specialist-avatar">
+                    <span id="chatAvatarLetter"></span>
+                </div>
+                <div class="chat-header-info">
+                    <div id="chatHeaderName" class="chat-header-name"></div>
+                    <div id="chatHeaderStatus" class="chat-header-status">онлайн</div>
+                </div>
+                <div id="chatTimer" class="chat-timer">
+                    <span class="material-symbols-rounded" style="font-size:16px;">timer</span>
+                    <span id="timerDisplay">30:00</span>
+                </div>
+
+                <button class="back-btn" style="margin-left:8px; color:var(--red);" onclick="confirmEndSession()"
+                    title="Завершить сессию">
+                    <span class="material-symbols-rounded">logout</span>
+                </button>
+            </div>
+
+            <!-- Messages -->
+            <div id="chatMessages" class="chat-messages"></div>
+
+            <!-- Typing Indicator -->
+            <div id="typingIndicator" class="typing-indicator" style="margin: 0 16px 8px;">
+                <div class="typing-dot"></div>
+                <div class="typing-dot"></div>
+                <div class="typing-dot"></div>
+            </div>
+
+            <!-- Chat Input -->
+            <div class="chat-input-area" style="position:relative;">
+                <!-- Sticker Picker -->
+                <div id="stickerPicker" class="sticker-picker"></div>
+
+                <button id="moodBtn" class="chat-action-btn" onclick="toggleStickerPicker()" title="Стикеры"
+                    style="flex-shrink:0;">
+                    <span class="material-symbols-rounded">mood</span>
+                </button>
+
+                <div class="chat-input-wrapper" id="inputWrapper" style="flex:1;">
+                    <textarea id="chatInput" class="chat-input" placeholder="Написать сообщение..." rows="1"
+                        oninput="onChatInput(this)" style="background:transparent; padding:0 10px;"></textarea>
+                </div>
+
+                <div class="chat-input-right-group">
+                    <div class="chat-input-actions">
+                        <button class="chat-action-btn" onclick="triggerFileUpload('image')" title="Фото">
+                            <span class="material-symbols-rounded">photo_camera</span>
+                        </button>
+                        <button class="chat-action-btn" onclick="triggerFileUpload('file')" title="Файл">
+                            <span class="material-symbols-rounded">attach_file</span>
+                        </button>
+                    </div>
+
+                    <button id="voiceBtn" class="voice-record-btn" title="Голосовое сообщение">
+                        <span class="material-symbols-rounded">mic</span>
+                    </button>
+                    <button id="sendBtn" class="send-btn" onclick="sendMessage()">
+                        <span class="material-symbols-rounded">send</span>
+                    </button>
+                </div>
+
+                <!-- Recording UI (hidden by default) -->
+                <div id="recordingUI" class="recording-ui">
+                    <div class="recording-dot"></div>
+                    <div id="recordingTime" class="recording-time">0:00</div>
+                    <div id="recordingWaveform" class="recording-waveform"></div>
+                    <div class="recording-cancel" onclick="cancelRecording()">
+                        <span class="material-symbols-rounded">close</span> <span class="cancel-text">Отмена</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Hidden file input -->
+            <input type="file" id="fileInput" style="display:none" onchange="handleFileUpload(event)">
+        </div>
+
+        <!-- ═══════════ SCREEN: SPECIALIST DASHBOARD ═══════════ -->
+        <div id="screenDashboard" class="screen">
+            <!-- Dashboard Header -->
+            <div class="dashboard-header">
+                <div class="dash-profile-btn" onclick="openProfile()" id="dashAvatarBtn">
+                    <div class="dash-avatar" id="dashAvatarImg">
+                        <span id="dashAvatarLetter"></span>
+                    </div>
+                    <div>
+                        <div class="dashboard-greeting">Привет, <span id="specName" class="gradient-text"></span>!</div>
+                        <p class="text-muted" style="font-size:12px; margin:0;">Нажмите для профиля</p>
+                    </div>
+                </div>
+                <div style="display:flex; gap:8px;">
+                    <button class="online-toggle-btn" id="onlineToggleBtn" onclick="toggleOnlineStatus()"
+                        title="Online/Offline">
+                        <span class="material-symbols-rounded" style="font-size:18px;">wifi</span>
+                    </button>
+                    <button class="btn btn-danger btn-sm" onclick="specialistLogout()" style="width:auto;">
+                        <span class="material-symbols-rounded" style="font-size:18px;">logout</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Stats Cards -->
+            <div class="stats-grid" id="dashStats">
+                <div class="stat-card glass-card">
+                    <div class="stat-icon purple">
+                        <span class="material-symbols-rounded">forum</span>
+                    </div>
+                    <div class="stat-value" id="statTotal">—</div>
+                    <div class="stat-label">Всего сессий</div>
+                </div>
+                <div class="stat-card glass-card">
+                    <div class="stat-icon teal">
+                        <span class="material-symbols-rounded">check_circle</span>
+                    </div>
+                    <div class="stat-value" id="statCompleted">—</div>
+                    <div class="stat-label">Завершено</div>
+                </div>
+                <div class="stat-card glass-card">
+                    <div class="stat-icon gold">
+                        <span class="material-symbols-rounded">star</span>
+                    </div>
+                    <div class="stat-value" id="statRating">—</div>
+                    <div class="stat-label">Рейтинг</div>
+                </div>
+            </div>
+
+            <h3 style="font-size:16px; font-weight:600; margin:20px 0 12px; display:flex; align-items:center; gap:8px;">
+                Активные сессии
+            </h3>
+            <div id="dashboardSessions">
+                <div class="no-sessions">
+                    <span class="material-symbols-rounded" style="font-size:64px; opacity:0.2;">forum</span>
+                    <p>Нет активных сессий</p>
+                    <p class="text-muted mt-8">Ожидайте, когда клиент начнёт общение</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══════════ SCREEN: PROFILE ═══════════ -->
+        <div id="screenProfile" class="screen">
+            <div class="screen-header">
+                <button class="back-btn" onclick="showScreen('screenDashboard')">
+                    <span class="material-symbols-rounded">arrow_back</span>
+                </button>
+                <div class="screen-title">Мой профиль</div>
+            </div>
+
+            <!-- Profile Card -->
+            <div class="profile-hero glass-card">
+                <div class="profile-photo-wrap" id="profilePhotoWrap">
+                    <div class="profile-photo" id="profilePhoto">
+                        <span id="profilePhotoLetter" style="font-size:48px;"></span>
+                    </div>
+                </div>
+                <div class="profile-name" id="profileName">—</div>
+                <div class="profile-spec" id="profileSpec">—</div>
+                <div style="display:flex; gap:12px; justify-content:center; margin-top:12px;">
+                    <div class="profile-badge" id="profileOnlineBadge">
+                        <span class="online-dot" id="profileOnlineDot"></span>
+                        <span id="profileOnlineText">Офлайн</span>
+                    </div>
+                    <div class="profile-badge gold">
+                        <span class="material-symbols-rounded" style="font-size:14px;">star</span>
+                        <span id="profileRating">0.00</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Info Cards -->
+            <div class="profile-info-list">
+                <div class="profile-info-item glass-card">
+                    <span class="material-symbols-rounded profile-info-icon"
+                        style="color:var(--purple);">description</span>
+                    <div class="profile-info-content">
+                        <div class="profile-info-label">О себе</div>
+                        <div class="profile-info-value" id="profileDesc">Не указано</div>
+                    </div>
+                </div>
+                <div class="profile-info-item glass-card">
+                    <span class="material-symbols-rounded profile-info-icon" style="color:var(--gold);">payments</span>
+                    <div class="profile-info-content">
+                        <div class="profile-info-label">Цена за сеанс</div>
+                        <div class="profile-info-value" id="profilePrice">0 руб.</div>
+                    </div>
+                </div>
+                <div class="profile-info-item glass-card">
+                    <span class="material-symbols-rounded profile-info-icon"
+                        style="color:var(--teal);">account_circle</span>
+                    <div class="profile-info-content">
+                        <div class="profile-info-label">Логин</div>
+                        <div class="profile-info-value" id="profileUsername">—</div>
+                    </div>
+                </div>
+            </div>
+
+            <button class="btn btn-primary" style="margin-top:16px;" onclick="openProfileEdit()">
+                <span class="material-symbols-rounded">edit</span> Редактировать профиль
+            </button>
+        </div>
+
+        <!-- ═══════════ SCREEN: PROFILE EDIT ═══════════ -->
+        <div id="screenProfileEdit" class="screen">
+            <div class="screen-header">
+                <button class="back-btn" onclick="showScreen('screenProfile'); loadProfile();">
+                    <span class="material-symbols-rounded">arrow_back</span>
+                </button>
+                <div class="screen-title">Редактировать</div>
+            </div>
+
+            <!-- Photo Upload -->
+            <div class="edit-photo-section">
+                <div class="edit-photo-wrap" onclick="document.getElementById('profilePhotoInput').click()">
+                    <div class="edit-photo" id="editPhotoPreview">
+                        <span id="editPhotoLetter" style="font-size:40px;"></span>
+                    </div>
+                    <div class="edit-photo-overlay">
+                        <span class="material-symbols-rounded">photo_camera</span>
+                        <span style="font-size:11px;">Сменить фото</span>
+                    </div>
+                </div>
+                <input type="file" id="profilePhotoInput" accept="image/*" style="display:none"
+                    onchange="uploadProfilePhoto(event)">
+                <div style="font-size:12px; color:var(--text-muted); margin-top:8px;">JPG, PNG, WebP — до 5 МБ</div>
+            </div>
+
+            <!-- Profile Info Form -->
+            <div class="profile-edit-form">
+                <div class="edit-section-title">
+                    <span class="material-symbols-rounded">person</span> Личные данные
+                </div>
+
+                <div class="input-group">
+                    <label>Имя</label>
+                    <div class="input-with-icon">
+                        <span class="material-symbols-rounded input-icon">badge</span>
+                        <input type="text" id="editName" class="input-field has-icon" placeholder="Ваше имя..."
+                            maxlength="100">
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <label>О себе / Описание</label>
+                    <textarea id="editDesc" class="input-field"
+                        placeholder="Расскажите о себе, опыте и методах работы..." rows="4"
+                        style="resize:none;"></textarea>
+                </div>
+
+                <div class="input-group">
+                    <label>Цена за сеанс (руб.)</label>
+                    <div class="input-with-icon">
+                        <span class="material-symbols-rounded input-icon">payments</span>
+                        <input type="number" id="editPrice" class="input-field has-icon" placeholder="0" min="0"
+                            step="100">
+                    </div>
+                </div>
+
+                <button class="btn btn-primary" id="saveInfoBtn" onclick="saveProfileInfo()">
+                    <span class="material-symbols-rounded">save</span> Сохранить данные
+                </button>
+            </div>
+
+            <!-- Password Change -->
+            <div class="profile-edit-form" style="margin-top:16px;">
+                <div class="edit-section-title">
+                    <span class="material-symbols-rounded">lock</span> Сменить пароль
+                </div>
+
+                <div class="input-group">
+                    <label>Текущий пароль</label>
+                    <div class="input-with-icon">
+                        <span class="material-symbols-rounded input-icon">lock</span>
+                        <input type="password" id="editOldPassword" class="input-field has-icon"
+                            placeholder="Введите текущий пароль...">
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <label>Новый пароль</label>
+                    <div class="input-with-icon">
+                        <span class="material-symbols-rounded input-icon">lock_open</span>
+                        <input type="password" id="editNewPassword" class="input-field has-icon"
+                            placeholder="Минимум 6 символов...">
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <label>Подтвердить новый пароль</label>
+                    <div class="input-with-icon">
+                        <span class="material-symbols-rounded input-icon">lock_open</span>
+                        <input type="password" id="editConfirmPassword" class="input-field has-icon"
+                            placeholder="Повторите новый пароль...">
+                    </div>
+                </div>
+
+                <button class="btn btn-secondary" id="savePasswordBtn" onclick="changePassword()">
+                    <span class="material-symbols-rounded">key</span> Сменить пароль
+                </button>
+            </div>
+        </div>
+
+    </div><!-- /app-container -->
+
+    <script src="{% static 'webtgbot/js/app.js' %}"></script>
+</body>
+
+</html>

@@ -1,0 +1,12 @@
+command = '/home/www/venv/bin/gunicorn'
+pythonpath = '/home/www'
+bind = '0.0.0.0:8001'
+workers = 3
+user = 'www'
+limit_request_fields = 32000
+limit_request_field_size = 0
+raw_env = 'DJANGO_SETTINGS_MODULE=Fenix.settings'
+errorlog = '/home/www/gunicorn_error.log'
+accesslog = '/home/www/gunicorn_access.log'
+loglevel = 'DEBUG'
+worker_class = "uvicorn.workers.UvicornWorker"
