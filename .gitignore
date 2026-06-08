@@ -39,3 +39,6 @@ nginx_error.log
 
 # Apple Double
 ._*
+
+# Project docs (local only)
+CLAUDE.md
