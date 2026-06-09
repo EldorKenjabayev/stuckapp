@@ -10,3 +10,5 @@ errorlog = '/home/www/gunicorn_error.log'
 accesslog = '/home/www/gunicorn_access.log'
 loglevel = 'DEBUG'
 worker_class = "uvicorn.workers.UvicornWorker"
+timeout = 0
+keepalive = 120
