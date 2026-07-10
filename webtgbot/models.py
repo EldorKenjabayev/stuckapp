@@ -16,6 +16,7 @@ class WebUser(models.Model):
                                      unique=True, blank=True)
     created_at = models.DateTimeField(verbose_name='Дата создания', auto_now_add=True)
     is_active = models.BooleanField(verbose_name='Активен', default=True)
+    ip_address = models.GenericIPAddressField(verbose_name='IP адрес', null=True, blank=True)
 
     def save(self, *args, **kwargs):
         if not self.session_token:
@@ -44,6 +45,7 @@ class ChatSession(models.Model):
     expires_at = models.DateTimeField(verbose_name='Истекает в', blank=True, null=True)
     is_active = models.BooleanField(verbose_name='Активна', default=True)
     ended_at = models.DateTimeField(verbose_name='Завершена в', null=True, blank=True)
+    cleaned = models.BooleanField(verbose_name='Xabarlar tozalangan', default=False)
 
     def save(self, *args, **kwargs):
         if not self.expires_at:
@@ -155,4 +157,20 @@ class UserRequest(models.Model):
     class Meta:
         verbose_name = 'Запрос пользователя (Web)'
         verbose_name_plural = 'Запросы пользователей (Web)'
+        ordering = ('-created_at',)
+
+
+class BlockedIP(models.Model):
+    """Bloklangan IP manzillar — admin panelda boshqariladi"""
+    ip_address = models.GenericIPAddressField(verbose_name='IP адрес', unique=True)
+    reason = models.CharField(max_length=255, verbose_name='Причина блокировки', blank=True)
+    created_at = models.DateTimeField(verbose_name='Дата блокировки', auto_now_add=True)
+    is_active = models.BooleanField(verbose_name='Активен', default=True)
+
+    def __str__(self):
+        return f'{self.ip_address} {"🚫" if self.is_active else "✅"}'
+
+    class Meta:
+        verbose_name = 'Заблокированный IP'
+        verbose_name_plural = 'Заблокированные IP'
         ordering = ('-created_at',)

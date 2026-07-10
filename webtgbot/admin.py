@@ -2,7 +2,7 @@ from django import forms
 from django.contrib import admin
 from django.contrib.auth.models import User
 from .models import (
-    WebUser, ChatSession, ChatMessage, SupportGroup, UserRequest
+    WebUser, ChatSession, ChatMessage, SupportGroup, UserRequest, BlockedIP
 )
 
 
@@ -11,10 +11,10 @@ from .models import (
 
 @admin.register(WebUser)
 class WebUserAdmin(admin.ModelAdmin):
-    list_display = ('name', 'session_token', 'is_active', 'created_at')
-    search_fields = ('name',)
+    list_display = ('name', 'ip_address', 'is_active', 'created_at')
+    search_fields = ('name', 'ip_address')
     list_filter = ('is_active', 'created_at')
-    readonly_fields = ('session_token', 'created_at')
+    readonly_fields = ('session_token', 'created_at', 'ip_address')
 
 
 class ChatMessageInline(admin.TabularInline):
@@ -59,3 +59,11 @@ class UserRequestAdmin(admin.ModelAdmin):
     @admin.display(description='Проблема')
     def problem_short(self, obj):
         return obj.problem[:80] + '...' if len(obj.problem) > 80 else obj.problem
+
+
+@admin.register(BlockedIP)
+class BlockedIPAdmin(admin.ModelAdmin):
+    list_display = ('ip_address', 'reason', 'is_active', 'created_at')
+    search_fields = ('ip_address',)
+    list_filter = ('is_active',)
+    list_editable = ('is_active',)

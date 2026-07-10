@@ -22,6 +22,26 @@ from .utils import forward_web_message_to_telegram
 logger = logging.getLogger(__name__)
 
 
+def get_client_ip(request):
+    """Mijoz IP manzilini aniqlash (nginx proxy orqasida)"""
+    x_forwarded = request.META.get('HTTP_X_FORWARDED_FOR', '')
+    if x_forwarded:
+        return x_forwarded.split(',')[0].strip()
+    x_real = request.META.get('HTTP_X_REAL_IP', '')
+    if x_real:
+        return x_real
+    return request.META.get('REMOTE_ADDR', '0.0.0.0')
+
+
+def is_ip_blocked(ip):
+    """IP bloklanganligini tekshirish"""
+    try:
+        from .models import BlockedIP
+        return BlockedIP.objects.filter(ip_address=ip, is_active=True).exists()
+    except Exception:
+        return False
+
+
 def index(request):
     """Главная страница — веб-чат приложение"""
     return render(request, 'webtgbot/index.html')
@@ -31,6 +51,20 @@ def index(request):
 def register(request):
     """Регистрация пользователя по имени"""
     try:
+        ip = get_client_ip(request)
+
+        # IP bloklanganmi?
+        if is_ip_blocked(ip):
+            return JsonResponse({'error': 'Доступ ограничен'}, status=403)
+
+        # Har bir IP ga faqat 1 ta akkunt
+        existing = WebUser.objects.filter(ip_address=ip).first()
+        if existing:
+            logger.warning(f"IP {ip} qayta register qilmoqchi, oldingi akkunti: {existing.name}")
+            return JsonResponse({
+                'error': 'Вы уже регистрировались ранее'
+            }, status=429)
+
         data = json.loads(request.body)
         name = data.get('name', '').strip()
         if not name or len(name) < 2:
@@ -38,7 +72,7 @@ def register(request):
         if len(name) > 50:
             return JsonResponse({'error': 'Имя слишком длинное'}, status=400)
 
-        user = WebUser.objects.create(name=name)
+        user = WebUser.objects.create(name=name, ip_address=ip)
         return JsonResponse({
             'success': True,
             'user': {
@@ -234,6 +268,12 @@ def create_request(request):
 def create_session(request):
     """Создать сессию чата между клиентом и специалистом"""
     try:
+        ip = get_client_ip(request)
+
+        # IP bloklanganmi?
+        if is_ip_blocked(ip):
+            return JsonResponse({'error': 'Доступ ограничен'}, status=403)
+
         data = json.loads(request.body)
         token = data.get('token', '').strip()
         specialist_id = data.get('specialist_id')

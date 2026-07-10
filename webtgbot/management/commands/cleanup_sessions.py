@@ -45,16 +45,18 @@ class Command(BaseCommand):
             session.save()
             count += 1
 
-        # Также удаляем старые завершённые сессии (>1 час)
+        # Eski sessiyalarni o'chirib yubormasdan, cleaned=True belgilaymiz
+        # Sessiya yozuvi qoladi — kim qachon ochgani admin panelda ko'rinib turadi
         old_sessions = ChatSession.objects.filter(
             is_active=False,
+            cleaned=False,
             ended_at__lte=now - timezone.timedelta(hours=1)
         )
-        old_count = old_sessions.delete()[0]
+        old_count = old_sessions.update(cleaned=True)
 
         if count or old_count:
             self.stdout.write(self.style.SUCCESS(
-                f'Завершено: {count} сессий, удалено {old_count} старых записей'
+                f'Завершено: {count} сессий, xabarlar tozalandi: {old_count} ta sessiya'
             ))
         else:
             self.stdout.write('Нет истекших сессий')
